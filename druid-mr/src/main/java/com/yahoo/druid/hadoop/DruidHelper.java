@@ -19,7 +19,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import io.druid.guice.ServerModule;
 import io.druid.jackson.DefaultObjectMapper;
-import io.druid.segment.loading.DataSegmentPusherUtil;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.TimelineObjectHolder;
 import io.druid.timeline.VersionedIntervalTimeline;
@@ -56,8 +55,7 @@ public class DruidHelper
       public String apply(TimelineObjectHolder<String, DataSegment> input)
       {
         DataSegment segment = input.getObject().getChunk(0).getObject();
-        //TODO: make sure that there is no problem if storageDir ends with a / already
-        return storageDir + "/" + dataSource + "/" + DataSegmentPusherUtil.getHdfsStorageDir(segment) + "/index.zip";
+        return (String)segment.getLoadSpec().get("path");
       }
     });
   }
@@ -115,8 +113,8 @@ public class DruidHelper
         Throwables.propagate(ex);
       }
     }
-    
-    throw new RuntimeException("failed to find list of segments from overlord");
+
+    throw new RuntimeException(String.format( "failed to find list of segments, dataSource[%s], interval[%s], overlord[%s]", dataSource, interval, overlordUrl));
   }
 
   protected String getSegmentListUsedActionJson(String dataSource, String interval) {
