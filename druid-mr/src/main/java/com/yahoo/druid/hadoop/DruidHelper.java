@@ -11,14 +11,11 @@
 package com.yahoo.druid.hadoop;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-import io.druid.guice.ServerModule;
-import io.druid.jackson.DefaultObjectMapper;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.TimelineObjectHolder;
 import io.druid.timeline.VersionedIntervalTimeline;
@@ -27,7 +24,6 @@ import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -83,19 +79,7 @@ public class DruidHelper
         out.close();
         int responseCode = conn.getResponseCode();
         if(responseCode == 200) {
-          ObjectMapper mapper = new DefaultObjectMapper();
-          mapper.registerModules(
-            Lists.transform(
-              new ServerModule().getJacksonModules(),
-              new Function<Module, Module>() {
-                @Nullable
-                @Override
-                public Module apply(Module input) {
-                  return input;
-                }
-              }
-            )
-          );
+          ObjectMapper mapper = DruidInitialization.getInstance().getObjectMapper();
           Map<String,Object> obj =
             mapper.readValue(conn.getInputStream(), new TypeReference<Map<String,Object>>(){});
           return mapper.convertValue(obj.get("result"), new TypeReference<List<DataSegment>>(){});
